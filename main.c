@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     NFA_destroy(ec);
     NFA_destroy(n);
     DFA_destroy(d);
-    DFA_destroy(dm);
+    //DFA_destroy(dm);
     return 0;
 }
 
