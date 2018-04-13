@@ -3,7 +3,7 @@
 
 static const char preamble[] =
 "\\documentclass{article}\n"
-"\\usepackage[margin=0px,top=1cm]{geometry}"
+"\\usepackage[landscape,margin=0px,top=1cm]{geometry}"
 "\\usepackage{tikz}\n"
 "\\usepackage{environ}\n"
 "\\usepackage{LinkedList}\n"
