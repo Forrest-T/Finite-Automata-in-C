@@ -14,12 +14,16 @@
 \begin{center}
     \begin{automaton}
         \node[state,initial] (q_0) {$q_0$};
-        \node[state,accepting] (q_1) [right=of q_0] {$q_1$};
-        \node[state] (q_2) [below=of q_0] {$q_2$};
+        \node[state] (q_1) [right=of q_0] {$q_1$};
+        \node[state] (q_2) [right=of q_1] {$q_2$};
+        \node[state] (q_3) [below=of q_0] {$q_3$};
+        \node[state] (q_4) [right=of q_3] {$q_4$};
 \path[every node/.style={font=\sffamily\small}]
-        (q_0) edge [bend left] node {a} (q_1) edge [bend right] node {b,c} (q_2)
-        (q_1) edge node {a,b,c} (q_2)
-        (q_2) edge [loop above] node {a,b,c} ()
+        (q_0) edge [bend left] node {a} (q_1) edge [bend left] node {b} (q_2) edge [bend right] node {c} (q_3)
+        (q_1) edge node {a,b} (q_3) edge [bend right] node {c} (q_4)
+        (q_2) edge node {a,b} (q_3) edge [loop above] node {c} ()
+        (q_3) edge [loop above] node {a,b,c} ()
+        (q_4) edge [bend left] node {a,b,c} (q_3)
 ;
     \end{automaton}
 \end{center}
