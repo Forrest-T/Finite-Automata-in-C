@@ -5,3 +5,8 @@ output/*.aux
 output/*.log
 output/*.out
 tags
+*.o
+parser
+test_DFA
+test_NFA
+test_parser
