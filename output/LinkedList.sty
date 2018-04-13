@@ -1,0 +1,197 @@
+% LinkedList Generation Package
+% 
+% (c) Adam Blank
+%
+%% This program can be redistributed and/or modified under the terms
+%% of the LaTeX Project Public License Distributed from CTAN archives
+%% in directory macros/latex/base/lppl.txt.
+% 
+\NeedsTeXFormat{LaTeX2e}[2015/01/19]
+\ProvidesPackage{LinkedList}[2015/01/19 v0.01 LaTeX package for generating LinkedLists]
+
+\RequirePackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{positioning}
+\usetikzlibrary{shapes}
+\usetikzlibrary{automata}
+\usetikzlibrary{snakes}
+\usetikzlibrary{decorations.pathmorphing, decorations.text, calc}
+\usetikzlibrary{decorations.pathreplacing,calc}
+\RequirePackage{etoolbox}
+\RequirePackage{xstring}
+\RequirePackage{xparse}
+
+
+\newcommand{\nodecol}{black}
+\newcommand{\lldir}{right}
+
+
+\newcounter{numll}
+\newcounter{numlllag}
+
+
+\def\pgfkeysifstyledefined#1#2#3{%
+  \pgfkeys@ifcsname pgfk@#1/.@cmd\endcsname#2\else#3\fi}
+
+
+\ExplSyntaxOn
+\NewDocumentCommand{\llnodes}{m}{\setcounter{numll}{0}\setcounter{numlllag}{-1}\clist_map_inline:on{#1}{%
+    \pgfkeysifstyledefined{/tikz/\arabic{numll}NODE}{}{\tikzstyle{\arabic{numll}NODE}=[];}
+    \ifnumgreater{\arabic{numll}}{0}{\addtocounter{numlllag}{1}
+        \ifnum\pdf@strcmp{\string##1}{null}=0
+            \node(\arabic{numll}) [\arabic{numll}NODE,draw=none,\lldir=of~\arabic{numlllag}] {\vphantom{1}};
+        \else \ifnum\pdf@strcmp{\string##1}{...}=0
+            \node(\arabic{numll}) [draw=none,\lldir=of~\arabic{numlllag}] {$\dots$};
+        \else
+            \node(\arabic{numll}) [\arabic{numll}NODE, \lldir=of~\arabic{numlllag}] {\vphantom{1}##1};
+        \fi\fi
+    }{
+        \ifnum\pdf@strcmp{\string##1}{null}=0
+            \node(\arabic{numll}) [\arabic{numll}NODE,draw=none] {\vphantom{1}};
+        \else
+            \node(\arabic{numll}) [\arabic{numll}NODE]{##1\vphantom{1}};
+        \fi
+    }
+    \addtocounter{numll}{1}%
+}
+\addtocounter{numlllag}{1}
+\ifnumgreater{\arabic{numlllag}}{-1}{
+    \node(null) [draw=none,\lldir=of~\arabic{numlllag}] {\vphantom{1}};%
+}{
+    \node(null) [draw=none] {\vphantom{1}};%
+}
+}
+
+\def\ifnodedefined#1#2#3{%   
+   \expandafter\ifx\csname pgf@sh@pi@#1\endcsname\pgfpictureid
+      #2
+   \else
+      #3
+   \fi
+}
+
+\NewDocumentCommand{\makellrefs}{> { \SplitList { , } } m}{\ProcessList{#1}{\llsplit}}
+
+\NewDocumentCommand{\makellhls}{> { \SplitList { , } } m}{\ProcessList{#1}{\llhlsplit}}
+
+
+\ExplSyntaxOff
+\NewDocumentCommand{\llsplit}{> { \SplitArgument{1}{ = } } m}{\llref#1}
+\NewDocumentCommand{\llhlsplit}{> { \SplitArgument{1}{ = } } m}{\llhlhelp#1}
+\NewDocumentCommand{\llhlhelp}{> {\SplitArgument{1}{ - } } m m}{\llhl[\IfNoValueTF{#2}{red}{#2}]#1}
+
+\newcommand{\LLNumber}{}
+
+\newcommand{\edgelabel}[3]{
+\pgfkeysifstyledefined{/tikz/edgelabel}{}{\tikzstyle{edgelabel}=[draw=none];}
+\IfSubStr{#2}{ref}{
+        #1 #2 node[above=4.2pt,left=0.2em,edgelabel] {\LLNumber} #3;\addtocounter{edgecounter}{1}
+    }{
+        #1 #2 node[below=0.2em,edgelabel] {\LLNumber} #3;\addtocounter{edgecounter}{1}
+    }
+}
+\ExplSyntaxOn
+
+
+\NewDocumentCommand{\llref}{mm}{
+    \pgfkeysifstyledefined{/tikz/REF-#2}{}{\tikzstyle{REF-#2}=[];}
+    \ifnodedefined{ref#1}{
+        \node(rref#1) [\lldir=of~ref#1, draw=none] {\texttt{#2}};
+        \edgelabel{\path[->,thick,every node/.style={font=\sffamily\small},REF-#2]}{(rref#1) edge[decorate,right]}{(#1)}
+    }{%
+        \node(ref#1) [above=of~#1, draw=none] {\texttt{#2}};%
+        \edgelabel{\path[->,thick,every node/.style={font=\sffamily\small},REF-#2]}{(ref#1) edge[decorate,right]}{(#1)}
+    }
+}
+
+\newcommand*{\IsInteger}[3]{%
+    \IfStrEq{#1}{ }{%
+        #3% is a blank string
+    }{%
+        \IfInteger{#1}{#2}{#3}%
+    }%
+}%
+
+\NewDocumentCommand{\hlllinkpath}{}{\path[->,thick,every node/.style={font=\sffamily\small}]}
+
+\NewDocumentCommand{\llhl}{O{red}mgO{solid}}{
+\IfNoValueTF{#3}{
+    \IsInteger{#2}{
+        \setcounter{numll}{#2}
+        \tikzstyle{\arabic{numll}NODE} = [style={draw=#1,very~thick,#4}]
+    }{
+        \tikzstyle{REF-#2} = [style={draw=#1,very~thick,#4}]
+    }
+}{
+    \tikzstyle{EDGE-#2-#3} = [style={draw=#1,very~thick,#4}]}
+}
+\NewDocumentCommand{\hlref}{O{red}mm}{
+    \errmessage{Deprecated.  Use \llhl instead.} 
+    \IfSubStr{#2}{ref}{
+        \edgelabel{\hlllinkpath}{(#2) edge[#1,ultra~thick,right]}{(#3)}
+    }{
+        \IfSubStr{#3}{null}{
+            \edgelabel{\hlllinkpath}{(#2) edge[#1,ultra~thick,right]}{(#3)}
+           }{\ifnumequal{#2 + 1}{#3}{
+                \edgelabel{\hlllinkpath}{(#2) edge[#1,ultra~thick,right]}{(#3)}
+            }{\ifnumgreater{#2}{#3}{
+                \edgelabel{\hlllinkpath}{(#2) edge[#1,ultra~thick,bend~right]}{(#3)}
+            }{\ifnumgreater{#3}{#2}{
+                \edgelabel{\hlllinkpath}{(#2) edge[#1,ultra~thick,bend~right]}{(#3)}
+            }{
+                \edgelabel{\hlllinkpath}{(#2) edge[#1,ultra~thick,loop~below]}{(#3)}
+            }}}
+        }
+    }
+}
+
+\NewDocumentCommand{\lllinkpath}{}{
+\path[->,thick,every node/.style={font=\sffamily\small}] 
+}
+
+\providebool{isfirst}
+\def\nullX{null}
+\NewDocumentCommand{\lllinks}{m}{
+    \setbool{isfirst}{true}
+    \clist_map_inline:on{#1}{%
+        \ifthenelse{\boolean{isfirst}}{
+            \edef\sndnode{##1}
+            \setbool{isfirst}{false}
+        }{
+            \edef\fstnode{\sndnode}
+            \edef\sndnode{##1}
+            \pgfkeysifstyledefined{/tikz/EDGE-\fstnode-\sndnode}{}{\tikzstyle{EDGE-\fstnode-\sndnode}=[];}
+
+            \ifx\sndnode\nullX 
+                \edgelabel{\lllinkpath}{(\fstnode) edge[right,EDGE-\fstnode-\sndnode]}{(\sndnode)}
+            \else \ifnumequal{\fstnode + 1}{\sndnode}{
+                \edgelabel{\lllinkpath}{(\fstnode) edge[right,EDGE-\fstnode-\sndnode]}{(\sndnode)}
+            }{\ifnumgreater{\fstnode}{\sndnode}{
+                \edgelabel{\lllinkpath}{(\fstnode) edge[bend~right,EDGE-\fstnode-\sndnode]}{(\sndnode)}%
+            }{\ifnumgreater{\sndnode}{\fstnode}{
+                \edgelabel{\lllinkpath}{(\fstnode) edge[bend~right,EDGE-\fstnode-\sndnode]}{(\sndnode)}
+            }{
+                \edgelabel{\lllinkpath}{(\fstnode) edge[loop~below,EDGE-\fstnode-\sndnode]}{(\sndnode)}
+            }}}\fi
+        }
+    }
+}
+\ExplSyntaxOff
+
+\newcounter{edgecounter}
+\tikzset{numbers/.style={edgelabel/.style={font={\bf\tiny\renewcommand{\LLNumber}{\arabic{edgecounter}}},circle,inner sep=1pt,minimum size=1pt,thin,draw=\nodecol,node distance=0.2em}, 
+                         node distance=1.0em and 1.5em}}
+\NewDocumentCommand{\linkedlist}{O{font=\normalsize} m > { \SplitList { ; } } m o o O{}}{%
+\setcounter{edgecounter}{0}
+\mbox{\begin{tikzpicture}[every node/.style={rectangle,draw=\nodecol,node distance=0.6em and 1.5em,#1}]%
+#6
+\makellhls{#5}%                      0-1=green,1-2,2-null=red,front,next=blue
+\llnodes{#2}%                        a,b,c,d
+\ProcessList{#3}{\lllinks}%          1,2;3,4,null
+\IfNoValueF{#4}{\makellrefs{#4}}%    1=front,2=blah (this is the argument that makes pointers to nodes)
+\end{tikzpicture}}%
+}
+
+\endinput
+%%
+%% End of file `LinkedList.sty'.

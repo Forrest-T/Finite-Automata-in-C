@@ -1,0 +1,7 @@
+*.un~
+*.swp
+.ycm_extra_conf.py
+output/*.aux
+output/*.log
+output/*.out
+tags
