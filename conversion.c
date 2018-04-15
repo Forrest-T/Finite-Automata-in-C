@@ -126,9 +126,8 @@ DFA *NFA_convert(NFA *n, char *alph, int alph_size) {
     int *map_size = malloc((n->num_states+1)*sizeof(int));
     // consider map[i][j][k]:
     // i = # of states from n combined into one
-    // j = jth state in d that is a combination of i states from n
-    // k = kth index (in n) of the aforementioned jth state in d
-    int ***map = malloc((n->num_states+1)*sizeof(int**));
+    // j = the index of the map_size[i]th state in d
+    int **map = malloc((n->num_states+1)*sizeof(int**));
     for (int i = 0; i <= n->num_states; i++)
         map[i] = NULL;
     for (int i = 0; i <= n->num_states; i++)
@@ -141,8 +140,7 @@ DFA *NFA_convert(NFA *n, char *alph, int alph_size) {
     dstate_sub[newstate] = malloc(1*sizeof(int));
     dstate_sub[newstate][0] = n->start;
     map[1] = malloc(1*sizeof(int*));
-    map[1][0] = malloc(1*sizeof(int));
-    map[1][0][0] = n->start;
+    map[1][0] = 0;
     // loop over states in d as we create them
     for (int dstate = 0; dstate < d->num_states; dstate++) {
         // loop over symbols in alphabet
@@ -179,7 +177,7 @@ DFA *NFA_convert(NFA *n, char *alph, int alph_size) {
                     dstate_sub = realloc(dstate_sub, d->num_states*sizeof(int*));
                     dstate_sub[out] = malloc(total*sizeof(int));
                     map[0] = malloc(map_size[total]*sizeof(int*));
-                    map[0][0] = malloc(total*sizeof(int));
+                    map[0][0] = garbage;
                 }
                 found = 1;
             }
@@ -190,8 +188,8 @@ DFA *NFA_convert(NFA *n, char *alph, int alph_size) {
                     found = 0;
                     // check if the substate matches one in "set"
                     for (int set_index = 0; set_index < total; set_index++) {
-                        if (map[total][composite][sub] == set[set_index]) {
-                            accepting |= n->states[map[total][composite][sub]].accepting;
+                        if (dstate_sub[map[total][composite]][sub] == set[set_index]) {
+                            accepting |= n->states[dstate_sub[map[total][composite]][sub]].accepting;
                             found = 1;
                             break;
                         }
@@ -199,7 +197,7 @@ DFA *NFA_convert(NFA *n, char *alph, int alph_size) {
                     if (!found) break; // one of the substates didn't match
                 }
                 if (found) {
-                    out = composite; // TODO: "composite" is NOT the index in d
+                    out = map[total][composite];
                     break;
                 }
             }
@@ -212,9 +210,9 @@ DFA *NFA_convert(NFA *n, char *alph, int alph_size) {
                 dstate_sub = realloc(dstate_sub, d->num_states*sizeof(int*));
                 dstate_sub[out] = malloc(total*sizeof(int));
                 map[total] = realloc(map_size[total]>>1?map[total]:NULL, map_size[total]*sizeof(int*));
-                map[total][map_size[total]-1] = malloc(total*sizeof(int));
+                map[total][map_size[total]-1] = out;
                 for (int i = 0; i < total; i++)
-                    map[total][map_size[total]-1][i] = dstate_sub[out][i] = set[i];
+                    dstate_sub[out][i] = set[i];
             }
             // add transition from dstate to "out"
             DFA_updateTransition(d, dstate, alph[a], out);
@@ -222,9 +220,6 @@ DFA *NFA_convert(NFA *n, char *alph, int alph_size) {
     }
     // free everything
     for (int i = 0; i <= n->num_states; i++) {
-        for (int j = 0; j < map_size[i]; j++) {
-            if (dstate_size[j]) free(map[i][j]);
-        }
         free(map[i]);
     }
     for (int i = 0; i < d->num_states; i++)
