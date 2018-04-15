@@ -4,6 +4,9 @@
 #include "NFA.h"
 #include "DFA.h"
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)<(b))?(b):(a))
+
 // returns an NFA with all epsilon edges removed
 NFA *remove_epsilons(NFA *e);
 // returns an equivalent NFA with epsilon closure

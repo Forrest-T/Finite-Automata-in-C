@@ -1,5 +1,5 @@
 \documentclass{article}
-\usepackage[margin=0px,top=1cm]{geometry}\usepackage{tikz}
+\usepackage[landscape,margin=0px,top=1cm]{geometry}\usepackage{tikz}
 \usepackage{environ}
 \usepackage{LinkedList}
 \usetikzlibrary{arrows}
@@ -14,16 +14,20 @@
 \begin{center}
     \begin{automaton}
         \node[state,initial] (q_0) {$q_0$};
-        \node[state] (q_1) [right=of q_0] {$q_1$};
+        \node[state,accepting] (q_1) [right=of q_0] {$q_1$};
         \node[state] (q_2) [right=of q_1] {$q_2$};
-        \node[state] (q_3) [below=of q_0] {$q_3$};
-        \node[state] (q_4) [right=of q_3] {$q_4$};
+        \node[state,accepting] (q_3) [below=of q_0] {$q_3$};
+        \node[state,accepting] (q_4) [right=of q_3] {$q_4$};
+        \node[state,accepting] (q_5) [right=of q_4] {$q_5$};
+        \node[state] (q_6) [below=of q_3] {$q_6$};
+        \node[state,accepting] (q_7) [right=of q_6] {$q_7$};
 \path[every node/.style={font=\sffamily\small}]
-        (q_0) edge [bend left] node {a} (q_1) edge [bend left] node {b} (q_2) edge [bend right] node {c} (q_3)
-        (q_1) edge node {a,b} (q_3) edge [bend right] node {c} (q_4)
-        (q_2) edge node {a,b} (q_3) edge [loop above] node {c} ()
-        (q_3) edge [loop above] node {a,b,c} ()
-        (q_4) edge [bend left] node {a,b,c} (q_3)
+        (q_0) edge [bend right] node {a} (q_3) edge node {a} (q_4) edge node {a} (q_5) edge [bend right] node {a} (q_6) edge [bend left] node {a} (q_1)
+        (q_2) edge node {a} (q_3)
+        (q_3) edge node {b} (q_7) edge [bend left] node {b} (q_5) edge [bend right] node {b} (q_6) edge node {b} (q_1)
+        (q_4) edge [bend right] node {b} (q_7) edge [bend left] node {b} (q_5) edge node {b} (q_6) edge [bend right] node {b} (q_1)
+        (q_6) edge [bend left] node {b} (q_7)
+        (q_7) edge [loop above] node {b} () edge node {b} (q_5) edge [bend left] node {b} (q_6) edge [bend right] node {b} (q_1)
 ;
     \end{automaton}
 \end{center}

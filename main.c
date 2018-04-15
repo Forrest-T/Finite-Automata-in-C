@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
     // convert to DFA
     printf("Converting to DFA... ");
     fflush(stdout);
-    DFA *d = NFA_convert(n, "abc", 3); // TODO
+    DFA *d = NFA_convert(n, "abc", 3);
     DFA_print(d);
     printf("Done!\n");
     // minimize

@@ -184,7 +184,7 @@ DFA *NFA_convert(NFA *n, char *alph, int alph_size) {
                 found = 1;
             }
             // check if the set of states exists as a composite state
-            else for (int composite = 0; composite < map_size[total] && found != -1; composite++) {
+            else for (int composite = (found = 0); composite < map_size[total] && found != -1; composite++) {
                 // for each substate in the composite state
                 for (int sub = 0; sub < total; sub++) {
                     found = 0;
@@ -199,7 +199,7 @@ DFA *NFA_convert(NFA *n, char *alph, int alph_size) {
                     if (!found) break; // one of the substates didn't match
                 }
                 if (found) {
-                    out = composite;
+                    out = composite; // TODO: "composite" is NOT the index in d
                     break;
                 }
             }
@@ -238,6 +238,58 @@ DFA *NFA_convert(NFA *n, char *alph, int alph_size) {
 }
 
 DFA *DFA_minimize(DFA *d) {
-    // TODO
-    return d;
+    int dim = d->num_states-1;
+    char *table = malloc(dim*dim*sizeof(char));
+    int *map = malloc(d->num_states*sizeof(int));
+    // initialize lower left triangular table to all 0s
+    // rows: 1-->n, cols: 0-->n-1
+    for (int i = 0; i < dim; i++)
+        for (int j = 0; j <= i; j++)
+            table[dim*i+j] = 0;
+    // base case: accepting disparity
+    for (int i = 0; i < dim; i++)
+        for (int j = 0; j <= i; j++)
+            if (d->states[i+1].accepting != d->states[j].accepting)
+                table[dim*i+j] = 1;
+    int found = 1, big;
+    int dest[2];
+    // recursive case: check for differences on each edge
+    while (found) {
+        found = 0;
+        for (int i = 0; i < dim; i++) {
+            for (int j = 0; j <= i; j++) {
+                for (int k = 0; !table[dim*i+j] && k < d->alphabet_size; k++) {
+                    dest[0] = d->states[i+1].transitions[k];
+                    dest[1] = d->states[j].transitions[k];
+                    big = dest[0] < dest[1];
+                    if (dest[0] != dest[1] && table[dim*(dest[big]-1)+dest[1-big]]) {
+                        table[dim*i+j] = 1;
+                        found = 1;
+                    }
+                }
+            }
+        }
+    }
+    // table complete, construct states for new DFA
+    DFA *d2 = DFA_create(d->alphabet_size, d->alphabet);
+    DFA_addState(d2, d->states[0].accepting);
+    map[0] = 0;
+    for (int r = 1; r < d->num_states; r++) {
+        found = 0;
+        for (int c = 0; c < r; c++)
+            if (!table[dim*(r-1)+c]) {
+                found = 1;
+                map[r] = map[c];
+            }
+        if (!found) {
+            map[r] = d2->num_states;
+            DFA_addState(d2, d->states[r].accepting);
+        }
+    }
+    // copy edges to new combined states
+    for (int s = 0; s < d->num_states; s++)
+        for (int a = 0; a < d->alphabet_size; a++)
+            DFA_updateTransition(d2, map[s], d->alphabet[a], map[d->states[s].transitions[a]]);
+    free(table);
+    return d2;
 }
