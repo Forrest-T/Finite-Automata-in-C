@@ -56,11 +56,11 @@ NFA *remove_epsilons(NFA *n) {
     r->buf_size = n->buf_size;
     r->states = malloc(r->buf_size*sizeof(State));
     for (int s = 0; s < r->num_states; s++) {
+        r->states[s].accepting = n->states[s].accepting;
         r->states[s].active = 0;
         r->states[s].num_transitions = 0;
-        r->states[s].accepting = n->states[s].accepting;
         r->states[s].buf_size = n->states[s].buf_size;
-        r->states[s].transitions = malloc(r->buf_size*sizeof(Transition));
+        r->states[s].transitions = malloc(r->states[s].buf_size*sizeof(Transition));
         for (int t = 0; t < n->states[s].num_transitions; t++) {
             if (n->states[s].transitions[t].symbol != EPSILON)
                 NFA_addTransition(r, s,
