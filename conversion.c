@@ -286,5 +286,6 @@ DFA *DFA_minimize(DFA *d) {
         for (int a = 0; a < d->alphabet_size; a++)
             DFA_updateTransition(d2, map[s], d->alphabet[a], map[d->states[s].transitions[a]]);
     free(table);
+    free(map);
     return d2;
 }
