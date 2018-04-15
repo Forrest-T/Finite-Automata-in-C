@@ -103,6 +103,7 @@ NFA *parse(char *c, int len) {
 
 void die(const char *s) {
     printf("%s\n", s);
+    fflush(stdout);
     exit(1);
 }
 
