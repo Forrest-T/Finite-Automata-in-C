@@ -14,6 +14,6 @@ NFA *epsilon_closure(NFA *e);
 void epsilon_closure_helper(NFA*, int);
 // converts an NFA to a DFA
 DFA *NFA_convert(NFA *n, char*, int);
-DFA *DFA_minimize(DFA *d);              // TODO
+DFA *DFA_minimize(DFA *d);
 
 #endif
