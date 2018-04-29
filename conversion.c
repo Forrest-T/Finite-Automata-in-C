@@ -6,7 +6,6 @@
 NFA *remove_epsilons(NFA *n) {
     Transition temp;
     char c, c2;
-    int sub;
     // now, make the epsilons redundant
     for (int s = 0; s < n->num_states; s++) { // states
         for (int t = 0; t < n->states[s].num_transitions; t++) { // parent transitions
@@ -102,7 +101,7 @@ NFA *epsilon_closure(NFA *e) {
                 found = 1;
         if (!found)
             NFA_addTransition(n, source, EPSILON, dest);
-        if (n->states[dest].accepting) n->states[source].accepting = 1;
+        n->states[source].accepting |= n->states[dest].accepting;
     }
     free(old);
     free(cur);
