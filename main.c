@@ -7,9 +7,7 @@
 #include "NFA.h"
 #include "DFA.h"
 
-int debug_intermediate(int argc, char **argv) {
-    if (argc < 2)
-        die("Usage: ./parser {regexp}");
+int debug_intermediate(char **argv) {
     printf("\tregex:  /%s/\n", argv[1]);
     int length = strlen(argv[1]);
     printf("\tlength: %d\n", length);
@@ -35,7 +33,7 @@ int debug_intermediate(int argc, char **argv) {
     // convert to DFA
     printf("Converting to DFA... ");
     fflush(stdout);
-    DFA *d = NFA_convert(n, "abc", 3);
+    DFA *d = NFA_convert(n, argv[2], strlen(argv[2]));
     DFA_print(d);
     printf("Done!\n");
     // minimize
@@ -54,9 +52,8 @@ int debug_intermediate(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
-#ifdef DEBUG
-    return debug_intermediate(argc, argv);
-#endif
+    if (argc == 3)
+        return debug_intermediate(argv);
     char *alph = NULL;
     size_t buf_len = 0;
     if (getline(&alph, &buf_len, stdin) == -1) {
@@ -77,7 +74,13 @@ int main(int argc, char **argv) {
     DFA *d = NFA_convert(n, alph, strlen(alph)-1);
     DFA *dm = DFA_minimize(d);
     DFA_reset(dm);
+#ifdef DEBUG
+    NFA_print(ne);
+    NFA_print(ec);
+    NFA_print(n);
+    DFA_print(d);
     DFA_print(dm);
+#endif
     // read lines from stdin and run "dm"
     char *line = NULL;
     buf_len = 0;
