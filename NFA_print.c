@@ -43,7 +43,7 @@ void NFA_print(NFA *n) {
                     fprintf(f, "[bend left] ");
             }
             if (n->states[s].transitions[t].symbol == EPSILON)
-                fprintf(f, "node {%s} ", "\\varepsilon");
+                fprintf(f, "node {%s} ", "$\\varepsilon$");
             else
                 fprintf(f, "node {%c} ", n->states[s].transitions[t].symbol);
             if (n->states[s].transitions[t].destination == s)
