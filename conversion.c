@@ -15,7 +15,7 @@ NFA *remove_epsilons(NFA *n) {
             for (int t2 = 0; t2 < n->states[temp.destination].num_transitions; t2++) { // child transitions
                 c = n->states[temp.destination].transitions[t2].symbol; // child transition symbol
                 if (c == EPSILON) continue; // we already have a direct edge from the closure
-                c2 = 1;
+                c2 = 1; 
                 for (int i = 0; i < n->states[s].num_transitions; i++) { // parent transitions
                     if (n->states[s].transitions[i].symbol == c
                         && n->states[s].transitions[i].destination
@@ -29,23 +29,6 @@ NFA *remove_epsilons(NFA *n) {
                         n->states[temp.destination].transitions[t2].destination);
                 }
                 // we need to propogate the transition along q1's epsilon edges
-                sub = n->states[temp.destination].transitions[t2].destination;
-                for (int i = 0; i < n->states[sub].num_transitions; i++) { // sub-child transitions
-                    if (n->states[sub].transitions[i].symbol != EPSILON) continue;
-                    c2 = 1;
-                    for (int j = 0; j < n->states[s].num_transitions; j++) { // parent transitions
-                        if (n->states[s].transitions[j].symbol == c
-                            && n->states[s].transitions[j].destination
-                            == n->states[sub].transitions[i].destination) {
-                            c2 = 0;
-                            break;
-                        }
-                    }
-                    if (c2) {
-                        NFA_addTransition(n, s, c, 
-                                n->states[sub].transitions[i].destination);
-                    }
-                }
             }
         }
     }
@@ -119,12 +102,10 @@ NFA *epsilon_closure(NFA *e) {
                 found = 1;
         if (!found)
             NFA_addTransition(n, source, EPSILON, dest);
+        if (n->states[dest].accepting) n->states[source].accepting = 1;
     }
     free(old);
     free(cur);
-//    for (int i = 0; i < n->num_states; i++) {
-//        epsilon_closure_helper(n, i);
-//    }
     return n;
 }
 
