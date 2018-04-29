@@ -127,40 +127,6 @@ NFA *epsilon_closure(NFA *e) {
 //    }
     return n;
 }
-void epsilon_closure_helper(NFA *n, int index) {
-    State *s = n->states+index;
-    Transition t;
-    s->active = 1;
-    char c;
-    // loop over states that s has epsilon transitions to
-    for (int i = 0; i < s->num_transitions; i++) { // DFS
-        t = s->transitions[i];
-        if (t.symbol != EPSILON) continue;
-        if (!n->states[t.destination].active)
-            epsilon_closure_helper(n, t.destination);
-        if (n->states[t.destination].accepting) s->accepting = 1;
-        // loop over transitions of node pointed to from s
-        for (int j = 0; j < n->states[t.destination].num_transitions; j++) {
-            c = n->states[t.destination].transitions[j].symbol;
-            if (c != EPSILON) continue;
-            // check existing transitions to not add duplicates
-            for (int k = 0; k < s->num_transitions; k++) {
-                if (s->transitions[k].symbol == EPSILON // check if the epsilon
-                    && s->transitions[k].destination    // edge is already there
-                    == n->states[t.destination].transitions[j].destination)
-                {
-                    c = 0; // flag c for skipping creation of a new edge
-                    break;
-                }
-            }
-            if (c) {
-                NFA_addTransition(n, index, EPSILON,
-                        n->states[t.destination].transitions[j].destination);
-            }
-        }
-    }
-    s->active = 0;
-}
 
 DFA *NFA_convert(NFA *n, char *alph, int alph_size) {
     DFA *d = DFA_create(alph_size, alph);
