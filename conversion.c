@@ -73,12 +73,58 @@ NFA *remove_epsilons(NFA *n) {
 
 NFA *epsilon_closure(NFA *e) {
     NFA *n = NFA_copy(e);
-    // use "active" as a flag for avoiding loops
+    // old and current are arrays of epsilon transitions
+    // high order bits are source, low order bits are dest
+    int oldSize = 0, curSize = 0, bufSize = 1, found = 0;
+    long long int seek;
+    long long int *old = malloc(bufSize*sizeof(long long int));
+    long long int *cur = malloc(bufSize*sizeof(long long int));
     for (int s = 0; s < n->num_states; s++)
-        n->states[s].active = 0;
-    for (int i = 0; i < n->num_states; i++) {
-        epsilon_closure_helper(n, i);
+        for (int t = 0; t < n->states[s].num_transitions; t++)
+            if (n->states[s].transitions[t].symbol == EPSILON) {
+                if (curSize == bufSize) {
+                    bufSize *= 2;
+                    old = realloc(old, bufSize*sizeof(long long int));
+                    cur = realloc(cur, bufSize*sizeof(long long int));
+                }
+                cur[curSize++] = (long long int)s<<32 | n->states[s].transitions[t].destination;
+            }
+    while (oldSize != curSize) {
+        oldSize = curSize;
+        for (int i = 0; i < curSize; i++)
+            old[i] = cur[i];
+        for (int i = 0; i < oldSize; i++) {
+            for (int j = 0; j < oldSize; j++) {
+                if (i == j || (int)(old[i]) != (int)(old[j]>>32)) continue;
+                found = 0;
+                seek = (old[i]&0xffffffff00000000)|(int)old[j];
+                for (int k = 0; k < curSize && !found; k++)
+                    if (cur[k] == seek) found = 1;
+                if (!found) {
+                    if (curSize == bufSize) {
+                        bufSize *= 2;
+                        old = realloc(old, bufSize*sizeof(long long int));
+                        cur = realloc(cur, bufSize*sizeof(long long int));
+                    }
+                    cur[curSize++] = seek;
+                }
+            }
+        }
     }
+    for (int i = 0; i < curSize; i++) {
+        int source = cur[i]>>32, dest = cur[i];
+        found = 0;
+        for (int t = 0; t < n->states[source].num_transitions; t++)
+            if (n->states[source].transitions[t].destination == dest)
+                found = 1;
+        if (!found)
+            NFA_addTransition(n, source, EPSILON, dest);
+    }
+    free(old);
+    free(cur);
+//    for (int i = 0; i < n->num_states; i++) {
+//        epsilon_closure_helper(n, i);
+//    }
     return n;
 }
 void epsilon_closure_helper(NFA *n, int index) {
