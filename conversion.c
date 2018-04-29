@@ -150,7 +150,8 @@ DFA *NFA_convert(NFA *n, char *alph, int alph_size) {
             for (int sub = 0; sub < dstate_size[dstate]; sub++) {
                 // get every destination on a
                 for (int t = 0; t < n->states[dstate_sub[dstate][sub]].num_transitions; t++) {
-                    if (n->states[dstate_sub[dstate][sub]].transitions[t].symbol != alph[a]) continue;
+                    if (   n->states[dstate_sub[dstate][sub]].transitions[t].symbol != alph[a]
+                        && n->states[dstate_sub[dstate][sub]].transitions[t].symbol != DOT) continue;
                     found = 0;
                     accepting |= n->states[n->states[dstate_sub[dstate][sub]].transitions[t].destination].accepting;
                     // check for duplicates
