@@ -16,31 +16,41 @@ int debug_intermediate(char **argv) {
     printf("Creating NFA for /%s/... ", argv[1]);
     fflush(stdout);
     NFA *ne = parse(argv[1], length);
+#ifdef DEBUG
     NFA_print(ne);
+#endif
     printf("Done!\n");
     // epsilon closure
     printf("Calculating epsilon closure... ");
     fflush(stdout);
     NFA *ec = epsilon_closure(ne);
+#ifdef DEBUG
     NFA_print(ec);
+#endif
     printf("Done!\n");
     // remove epsilons
     printf("Removing epsilon transitions... ");
     fflush(stdout);
     NFA *n = remove_epsilons(ec);
+#ifdef DEBUG
     NFA_print(n);
+#endif
     printf("Done!\n");
     // convert to DFA
     printf("Converting to DFA... ");
     fflush(stdout);
     DFA *d = NFA_convert(n, argv[2], strlen(argv[2]));
+#ifdef DEBUG
     DFA_print(d);
+#endif
     printf("Done!\n");
     // minimize
     printf("Minimizing DFA... ");
     fflush(stdout);
     DFA *dm = DFA_minimize(d);
+#ifdef DEBUG
     DFA_print(dm);
+#endif
     printf("Done!\n");
     // clean up
     NFA_destroy(ne);
